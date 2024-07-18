@@ -1,3 +1,6 @@
+# https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+# make sure to apply the above first
+
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -17,4 +20,3 @@ metadata:
 spec:
   ipAddressPools:
   - my-ip-pool
-  announceInterval: 5s
