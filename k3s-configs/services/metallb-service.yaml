@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: k3s-api-server
   namespace: kube-system
+  annotations:
+    metallb.universe.tf/allow-shared-ip: k3s-api
 spec:
   type: LoadBalancer
   ports:
@@ -10,4 +12,4 @@ spec:
       port: 6443
       targetPort: 6443
   selector:
-    app: kubernetes
+    app: kube-apiserver
