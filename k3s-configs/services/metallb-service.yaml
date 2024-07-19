@@ -5,6 +5,7 @@ metadata:
   namespace: kube-system
   annotations:
     metallb.universe.tf/allow-shared-ip: k3s-api
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.240  # Specify your desired IP here
 spec:
   type: LoadBalancer
   ports:
