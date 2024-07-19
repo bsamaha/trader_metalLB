@@ -7,11 +7,22 @@ zookeeper:
   persistence:
     size: 1Gi
 
+# Kafka broker configuration
 replicaCount: 3
-architecture: "kraft"
-
 persistence:
   size: 5Gi
+
+# Explicitly configure Kafka brokers
+broker:
+  replicaCount: 3
+
+# Disable controller for Zookeeper mode
+controller:
+  replicaCount: 0
+
+# Disable KRaft mode
+kraft:
+  enabled: false
 
 externalAccess:
   enabled: false
@@ -25,6 +36,6 @@ metrics:
 serviceAccount:
   create: true
 
-# Explicitly disable KRaft mode
-kraft:
+# Ensure we're not in migration mode
+migration:
   enabled: false
