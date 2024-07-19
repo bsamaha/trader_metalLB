@@ -1,0 +1,29 @@
+global:
+  storageClass: "local-storage"
+
+replicaCount: 3
+
+externalAccess:
+  enabled: true
+  service:
+    type: LoadBalancer
+    ports:
+      external: 9094
+
+persistence:
+  size: 5Gi
+
+zookeeper:
+  enabled: true
+  replicaCount: 3
+  persistence:
+    size: 1Gi
+
+metrics:
+  kafka:
+    enabled: true
+  zookeeper:
+    enabled: true
+
+serviceAccount:
+  create: true
