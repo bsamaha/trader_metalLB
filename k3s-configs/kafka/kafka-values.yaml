@@ -4,11 +4,7 @@ global:
 replicaCount: 3
 
 externalAccess:
-  enabled: true
-  service:
-    type: LoadBalancer
-    ports:
-      external: 9094
+  enabled: false  # Changed to false
 
 persistence:
   size: 5Gi
@@ -18,6 +14,12 @@ zookeeper:
   replicaCount: 3
   persistence:
     size: 1Gi
+
+kraft:
+  enabled: false  # Explicitly disable KRaft mode
+
+controller:
+  replicaCount: 0  # Set to 0 as we're using Zookeeper mode
 
 metrics:
   kafka:
