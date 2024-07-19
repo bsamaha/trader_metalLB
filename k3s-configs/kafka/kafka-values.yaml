@@ -7,23 +7,14 @@ zookeeper:
   persistence:
     size: 1Gi
 
-kafka:
-  replicaCount: 3
-  persistence:
-    size: 5Gi
-  externalAccess:
-    enabled: false  # Set to true if you need external access
-  brokers:
-    - id: 0
-      host: kafka-0
-    - id: 1
-      host: kafka-1
-    - id: 2
-      host: kafka-2
+replicaCount: 3
+architecture: "kraft"
 
-controller:
-  enabled: false  # Explicitly disable controller for Zookeeper mode
-  replicaCount: 0
+persistence:
+  size: 5Gi
+
+externalAccess:
+  enabled: false
 
 metrics:
   kafka:
@@ -34,10 +25,6 @@ metrics:
 serviceAccount:
   create: true
 
-migration:
-  enabled: false  # We're not migrating to KRaft
-  mode: "none"
-
-# Ensure KRaft mode is disabled
+# Explicitly disable KRaft mode
 kraft:
   enabled: false
