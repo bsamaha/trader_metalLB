@@ -11,7 +11,7 @@ persistence:
 
 zookeeper:
   enabled: true
-  replicaCount: 3
+  replicaCount: 2
   persistence:
     size: 1Gi
 
@@ -19,7 +19,7 @@ kraft:
   enabled: false  # Explicitly disable KRaft mode
 
 controller:
-  replicaCount: 0  # Set to 0 as we're using Zookeeper mode
+  replicaCount: 2  # Set to 2 as we're using Zookeeper mode
 
 metrics:
   kafka:
