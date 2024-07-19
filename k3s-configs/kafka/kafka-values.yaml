@@ -6,6 +6,13 @@ zookeeper:
   replicaCount: 3
   persistence:
     size: 1Gi
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
 
 # Kafka broker configuration
 replicaCount: 3
@@ -15,6 +22,13 @@ persistence:
 # Explicitly configure Kafka brokers
 broker:
   replicaCount: 3
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
 
 # Disable controller for Zookeeper mode
 controller:
@@ -39,3 +53,35 @@ serviceAccount:
 # Ensure we're not in migration mode
 migration:
   enabled: false
+
+# Security settings
+auth:
+  clientProtocol: sasl
+  interBrokerProtocol: sasl
+  sasl:
+    mechanisms: plain
+    interBrokerMechanism: plain
+
+# Monitoring
+prometheusRule:
+  enabled: true
+
+# Logging
+logPersistence:
+  enabled: true
+  size: 2Gi
+
+# Readiness and liveness probes
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
+
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+  successThreshold: 1
