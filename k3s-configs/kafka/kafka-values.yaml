@@ -1,25 +1,29 @@
 global:
   storageClass: "local-storage"
 
-replicaCount: 3
-
-externalAccess:
-  enabled: false  # Changed to false
-
-persistence:
-  size: 5Gi
-
 zookeeper:
   enabled: true
-  replicaCount: 2
+  replicaCount: 3
   persistence:
     size: 1Gi
 
-kraft:
-  enabled: false  # Explicitly disable KRaft mode
+kafka:
+  replicaCount: 3
+  persistence:
+    size: 5Gi
+  externalAccess:
+    enabled: false  # Set to true if you need external access
+  brokers:
+    - id: 0
+      host: kafka-0
+    - id: 1
+      host: kafka-1
+    - id: 2
+      host: kafka-2
 
 controller:
-  replicaCount: 2  # Set to 2 as we're using Zookeeper mode
+  enabled: false  # Explicitly disable controller for Zookeeper mode
+  replicaCount: 0
 
 metrics:
   kafka:
@@ -29,3 +33,11 @@ metrics:
 
 serviceAccount:
   create: true
+
+migration:
+  enabled: false  # We're not migrating to KRaft
+  mode: "none"
+
+# Ensure KRaft mode is disabled
+kraft:
+  enabled: false
