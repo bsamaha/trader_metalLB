@@ -1,0 +1,44 @@
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 3
+
+defaultSettings:
+  defaultReplicaCount: 3
+  storageOverProvisioningPercentage: 200
+  storageMinimalAvailablePercentage: 10
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  host: longhorn.your-domain.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+longhornManager:
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+longhornDriver:
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+longhornUI:
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  host: homecluster

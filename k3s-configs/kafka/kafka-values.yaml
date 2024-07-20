@@ -1,5 +1,5 @@
 global:
-  storageClass: "local-storage"
+  storageClass: "longhorn-storage"
 
 zookeeper:
   enabled: true
