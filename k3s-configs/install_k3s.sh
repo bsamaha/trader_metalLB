@@ -11,6 +11,7 @@ LOAD_BALANCER_IP="192.168.1.240"
 set_kubeconfig_permissions() {
   local ip=$1
   ssh $SSH_USER@$ip <<EOF
+    sudo groupadd -f k3s-admin
     sudo mkdir -p /home/$SSH_USER/.kube
     sudo cp $KUBECONFIG_PATH $LOCAL_KUBECONFIG_PATH
     sudo chown $SSH_USER:$SSH_USER $LOCAL_KUBECONFIG_PATH
