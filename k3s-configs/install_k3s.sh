@@ -21,7 +21,7 @@ EOF
 
 # Initialize the cluster on the first master node
 echo "Installing k3s on the first master node ${MASTER_IPS[0]}"
-k3sup install --ip ${MASTER_IPS[0]} --user $SSH_USER --cluster --tls-san $LOAD_BALANCER_IP
+k3sup install --ip ${MASTER_IPS[0]} --user $SSH_USER --cluster --tls-san $LOAD_BALANCER_IP --no-extras
 
 # Set kubeconfig permissions on the first master node
 set_kubeconfig_permissions ${MASTER_IPS[0]}
