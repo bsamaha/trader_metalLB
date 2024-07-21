@@ -1,20 +1,20 @@
 #!/bin/bash
 
 echo "Applying MetalLB manifests..."
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+sudo kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
 
 echo "Waiting for MetalLB CRDs to be established..."
-kubectl wait --for condition=established --timeout=60s crd/ipaddresspools.metallb.io
-kubectl wait --for condition=established --timeout=60s crd/l2advertisements.metallb.io
+sudo kubectl wait --for condition=established --timeout=60s crd/ipaddresspools.metallb.io
+sudo kubectl wait --for condition=established --timeout=60s crd/l2advertisements.metallb.io
 
 echo "Applying MetalLB configuration..."
-kubectl apply -f k3s-configs/metallb/metallb-config.yaml
+sudo kubectl apply -f k3s-configs/metallb/metallb-config.yaml
 
 echo "Applying MetalLB service..."
-kubectl apply -f k3s-configs/metallb/metallb-service.yaml
+sudo kubectl apply -f k3s-configs/metallb/metallb-service.yaml
 
 echo "Waiting for LoadBalancer IP to be assigned..."
-kubectl wait --namespace=kube-system \
+sudo kubectl wait --namespace=kube-system \
   --for=condition=Ready service/k3s-api-server \
   --timeout=90s
 
@@ -37,15 +37,15 @@ echo "Restarting k3s service..."
 sudo systemctl restart k3s
 
 echo "Waiting for k3s to be ready..."
-kubectl wait --for=condition=Ready nodes --all --timeout=300s
+sudo kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
 echo "Verifying MetalLB deployment..."
-kubectl get pods -n metallb-system
+sudo kubectl get pods -n metallb-system
 
 echo "Verifying k3s-api-server service..."
-kubectl get svc -n kube-system k3s-api-server
+sudo kubectl get svc -n kube-system k3s-api-server
 
 echo "Verifying kubeconfig..."
-kubectl config view --raw
+sudo kubectl config view --raw
 
 echo "Setup complete! Please log out and log back in, or run 'source ~/.bashrc' to apply changes to your current session."
