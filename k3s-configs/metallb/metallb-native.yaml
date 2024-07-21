@@ -1879,23 +1879,3 @@ webhooks:
     resources:
     - l2advertisements
   sideEffects: None
-
----
-# MetalLB Configuration
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: my-ip-pool
-  namespace: metallb-system
-spec:
-  addresses:
-  - 192.168.1.240-192.168.1.250
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: my-l2-advertisement
-  namespace: metallb-system
-spec:
-  ipAddressPools:
-  - my-ip-pool

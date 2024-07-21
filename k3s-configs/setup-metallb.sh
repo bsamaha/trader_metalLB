@@ -1,19 +1,20 @@
 #!/bin/bash
 
 echo "Applying MetalLB manifests..."
-sudo kubectl apply -f k3s-configs/metallb/metallb-complete.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
 
-echo "Waiting for CRDs to be established..."
-sudo kubectl wait --for=condition=Established --all crd
+echo "Waiting for MetalLB CRDs to be established..."
+kubectl wait --for condition=established --timeout=60s crd/ipaddresspools.metallb.io
+kubectl wait --for condition=established --timeout=60s crd/l2advertisements.metallb.io
 
 echo "Applying MetalLB configuration..."
-sudo kubectl apply -f k3s-configs/metallb/metallb-config.yaml
+kubectl apply -f k3s-configs/metallb/metallb-config.yaml
 
 echo "Applying MetalLB service..."
-sudo kubectl apply -f k3s-configs/metallb/metallb-service.yaml
+kubectl apply -f k3s-configs/metallb/metallb-service.yaml
 
 echo "Waiting for LoadBalancer IP to be assigned..."
-sudo kubectl wait --namespace=kube-system \
+kubectl wait --namespace=kube-system \
   --for=condition=Ready service/k3s-api-server \
   --timeout=90s
 
@@ -36,9 +37,15 @@ echo "Restarting k3s service..."
 sudo systemctl restart k3s
 
 echo "Waiting for k3s to be ready..."
-sudo kubectl wait --for=condition=Ready nodes --all --timeout=300s
+kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
 echo "Verifying MetalLB deployment..."
-sudo kubectl get pods -n metallb-system
+kubectl get pods -n metallb-system
+
+echo "Verifying k3s-api-server service..."
+kubectl get svc -n kube-system k3s-api-server
+
+echo "Verifying kubeconfig..."
+kubectl config view --raw
 
 echo "Setup complete! Please log out and log back in, or run 'source ~/.bashrc' to apply changes to your current session."
