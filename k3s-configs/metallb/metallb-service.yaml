@@ -4,7 +4,7 @@ metadata:
   name: k3s-api-server
   namespace: kube-system
   annotations:
-    metallb.universe.tf/allow-shared-ip: k3s-api
+    metallb.universe.tf/allow-shared-ip: first-pool
     metallb.universe.tf/loadBalancerIPs: 192.168.1.240  
 spec:
   type: LoadBalancer

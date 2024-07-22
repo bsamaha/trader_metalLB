@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Applying MetalLB manifests..."
-sudo kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+sudo kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.7/config/manifests/metallb-native.yaml
 
 echo "Waiting for MetalLB CRDs to be established..."
 sudo kubectl wait --for condition=established --timeout=60s crd/ipaddresspools.metallb.io
