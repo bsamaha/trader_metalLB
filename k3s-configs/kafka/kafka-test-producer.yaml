@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-client-config
+  namespace: kafka
+data:
+  client.properties: |
+    security.protocol=SASL_PLAINTEXT
+    sasl.mechanism=SCRAM-SHA-256
+    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+        username="user1" \
+        password="${KAFKA_PASSWORD}";
+  produce-messages.sh: |
+    #!/bin/bash
+    while true; do
+      echo "Producing message at $(date)"
+      echo "Test message at $(date)" | kafka-console-producer.sh \
+        --producer.config /etc/kafka/client.properties \
+        --broker-list kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-1.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-2.kafka-broker-headless.kafka.svc.cluster.local:9092 \
+        --topic test
+      sleep 5
+    done
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafka-test-producer
+  namespace: kafka
+spec:
+  containers:
+  - name: kafka-test-producer
+    image: docker.io/bitnami/kafka:3.7.1-debian-12-r4
+    command: ["/bin/bash", "-c"]
+    args:
+    - |
+      export KAFKA_PASSWORD=$(kubectl get secret kafka-user-passwords --namespace kafka -o jsonpath='{.data.client-passwords}' | base64 -d | cut -d , -f 1)
+      envsubst < /etc/kafka/client.properties > /tmp/client.properties
+      chmod +x /etc/kafka/produce-messages.sh
+      /etc/kafka/produce-messages.sh
+    volumeMounts:
+    - name: config
+      mountPath: /etc/kafka
+  volumes:
+  - name: config
+    configMap:
+      name: kafka-client-config
