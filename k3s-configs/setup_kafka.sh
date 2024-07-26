@@ -21,6 +21,11 @@ kubectl wait --namespace kafka \
              --selector=app.kubernetes.io/name=kafka \
              --timeout=300s
 
+# Create a Secret for Kafdrop with Kafka password
+echo "Creating Secret for Kafdrop..."
+KAFKA_PASSWORD=$(kubectl get secret kafka-user-passwords --namespace kafka -o jsonpath='{.data.client-passwords}' | base64 -d | cut -d , -f 1)
+kubectl create secret generic kafdrop-kafka-secret --from-literal=kafka-password=$KAFKA_PASSWORD -n kafka
+
 # Install Kafdrop
 echo "Installing Kafdrop..."
 kubectl apply -f k3s-configs/kafka/kafdrop-deployment.yaml

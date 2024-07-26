@@ -20,7 +20,17 @@ spec:
         - containerPort: 9000
         env:
         - name: KAFKA_BROKERCONNECT
-          value: "kafka-broker-headless.kafka.svc.cluster.local:9092"
+          value: "kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-1.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-2.kafka-broker-headless.kafka.svc.cluster.local:9092"
+        - name: KAFKA_PROPERTIES
+          value: |
+            security.protocol=SASL_PLAINTEXT
+            sasl.mechanism=SCRAM-SHA-256
+            sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="user1" password="${KAFKA_PASSWORD}";
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kafka-user-passwords
+              key: client-passwords
         - name: JVM_OPTS
           value: "-Xms32M -Xmx64M"
         - name: SERVER_SERVLET_CONTEXTPATH
