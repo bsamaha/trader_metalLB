@@ -20,7 +20,7 @@ spec:
         - containerPort: 9000
         env:
         - name: KAFKA_BROKERCONNECT
-          value: "kafka-0.kafka-headless.kafka.svc.cluster.local:9092,kafka-1.kafka-headless.kafka.svc.cluster.local:9092,kafka-2.kafka-headless.kafka.svc.cluster.local:9092"
+          value: "kafka-broker-headless.kafka.svc.cluster.local:9092"
         - name: JVM_OPTS
           value: "-Xms32M -Xmx64M"
         - name: SERVER_SERVLET_CONTEXTPATH
