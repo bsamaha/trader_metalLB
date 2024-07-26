@@ -8,8 +8,6 @@ fi
 
 # Add Bitnami repo (for Kafka chart)
 helm repo add bitnami https://charts.bitnami.com/bitnami
-# Add Kafdrop repo
-helm repo add kafdrop https://obsidiandynamics.github.io/kafdrop
 helm repo update
 
 # Install Kafka
@@ -26,21 +24,12 @@ kubectl wait --namespace kafka \
 # Get Kafka password
 KAFKA_PASSWORD=$(kubectl get secret kafka-user-passwords --namespace kafka -o jsonpath='{.data.client-passwords}' | base64 -d | cut -d , -f 1)
 
-# Install Kafdrop using Helm
-echo "Installing Kafdrop..."
-helm upgrade -i kafdrop kafdrop/kafdrop \
-    --namespace kafka \
-    --set kafka.brokerConnect="kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-1.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-2.kafka-broker-headless.kafka.svc.cluster.local:9092" \
-    --set kafka.properties="security.protocol=SASL_PLAINTEXT\nsasl.mechanism=PLAIN\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"user1\" password=\"$KAFKA_PASSWORD\";" \
-    --set server.servlet.contextPath="/" \
-    --set cmdArgs="--message.format=DEFAULT --topic.deleteEnabled=false --topic.createEnabled=false" \
-    --set jvm.opts="-Xms32M -Xmx64M" \
-    --set service.type=LoadBalancer \
-    --set service.port=80 \
-    --set resources.requests.cpu=100m \
-    --set resources.requests.memory=128Mi \
-    --set resources.limits.cpu=500m \
-    --set resources.limits.memory=512Mi
+# Install Redpanda Console
+echo "Installing Redpanda Console..."
+export KAFKA_PASSWORD
+envsubst < k3s-configs/kafka/redpanda-console.yaml | kubectl apply -f -
 
-echo "Kafka and Kafdrop setup complete!"
-echo "Kafdrop will be accessible via LoadBalancer. Run 'kubectl get svc -n kafka' to find the external IP."
+unset KAFKA_PASSWORD
+
+echo "Kafka and Redpanda Console setup complete!"
+echo "Redpanda Console will be accessible via LoadBalancer. Run 'kubectl get svc -n kafka' to find the external IP."

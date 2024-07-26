@@ -1,0 +1,67 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redpanda-console
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redpanda-console
+  template:
+    metadata:
+      labels:
+        app: redpanda-console
+    spec:
+      containers:
+      - name: redpanda-console
+        image: redpandadata/console:v2.3.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: CONFIG_FILEPATH
+          value: /tmp/config.yml
+        volumeMounts:
+        - name: config
+          mountPath: /tmp/config.yml
+          subPath: config.yml
+      volumes:
+      - name: config
+        configMap:
+          name: redpanda-console-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redpanda-console-config
+  namespace: kafka
+data:
+  config.yml: |
+    kafka:
+      brokers:
+        - kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092
+        - kafka-broker-1.kafka-broker-headless.kafka.svc.cluster.local:9092
+        - kafka-broker-2.kafka-broker-headless.kafka.svc.cluster.local:9092
+      sasl:
+        enabled: true
+        mechanism: PLAIN
+        username: user1
+        password: ${KAFKA_PASSWORD}
+    connect:
+      enabled: false
+    schema_registry:
+      enabled: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda-console
+  namespace: kafka
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: redpanda-console
