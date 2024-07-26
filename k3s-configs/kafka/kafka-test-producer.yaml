@@ -16,7 +16,7 @@ data:
     while true; do
       echo "Producing message at $(date)"
       echo "Test message at $(date)" | kafka-console-producer.sh \
-        --producer.config /etc/kafka/client.properties \
+        --producer.config /tmp/client.properties \
         --broker-list kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-1.kafka-broker-headless.kafka.svc.cluster.local:9092,kafka-broker-2.kafka-broker-headless.kafka.svc.cluster.local:9092 \
         --topic test
       sleep 5
@@ -34,14 +34,24 @@ spec:
     command: ["/bin/bash", "-c"]
     args:
     - |
-      export KAFKA_PASSWORD=$(kubectl get secret kafka-user-passwords --namespace kafka -o jsonpath='{.data.client-passwords}' | base64 -d | cut -d , -f 1)
-      envsubst < /etc/kafka/client.properties > /tmp/client.properties
-      chmod +x /etc/kafka/produce-messages.sh
-      /etc/kafka/produce-messages.sh
+      export KAFKA_PASSWORD=$(cat /tmp/kafka-password)
+      sed "s/\${KAFKA_PASSWORD}/$KAFKA_PASSWORD/" /etc/kafka/client.properties > /tmp/client.properties
+      cp /etc/kafka/produce-messages.sh /tmp/produce-messages.sh
+      chmod +x /tmp/produce-messages.sh
+      /tmp/produce-messages.sh
     volumeMounts:
     - name: config
       mountPath: /etc/kafka
+    - name: kafka-password
+      mountPath: /tmp/kafka-password
+      subPath: kafka-password
   volumes:
   - name: config
     configMap:
       name: kafka-client-config
+  - name: kafka-password
+    secret:
+      secretName: kafka-user-passwords
+      items:
+      - key: client-passwords
+        path: kafka-password
