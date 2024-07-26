@@ -15,7 +15,7 @@ ingress:
 resources:
   limits:
     cpu: 500m
-    memory: 1Gi
+    memory: 50Gi
   requests:
     cpu: 250m
     memory: 512Mi
@@ -37,8 +37,3 @@ longhornUI:
   - key: "node-role.kubernetes.io/master"
     operator: "Exists"
     effect: "NoSchedule"
-
-ingress:
-  enabled: true
-  ingressClassName: nginx
-  host: homecluster

@@ -7,7 +7,7 @@ LOAD_BALANCER_IP="192.168.1.240"
 
 # Initialize the cluster on the first master node
 echo "Installing k3s on the first master node ${MASTER_IPS[0]}"
-k3sup install --ip ${MASTER_IPS[0]} --user $SSH_USER --cluster --tls-san $LOAD_BALANCER_IP --no-extras --k3s-extra-args "--disable servicelb --disable traefik"
+k3sup install --ip ${MASTER_IPS[0]} --user $SSH_USER --cluster --tls-san $LOAD_BALANCER_IP --no-extras"
 
 # Join subsequent master nodes to the cluster
 for (( i=1; i<${#MASTER_IPS[@]}; i++ )); do
