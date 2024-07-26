@@ -45,12 +45,10 @@ data:
         - kafka-broker-2.kafka-broker-headless.kafka.svc.cluster.local:9092
       sasl:
         enabled: true
-        mechanism: PLAIN
+        mechanism: SCRAM-SHA-256
         username: user1
         password: ${KAFKA_PASSWORD}
     connect:
-      enabled: false
-    schema_registry:
       enabled: false
 ---
 apiVersion: v1
