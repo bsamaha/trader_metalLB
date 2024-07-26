@@ -8,13 +8,13 @@ metadata:
     nginx.ingress.kubernetes.io/auth-secret: longhorn-auth
 spec:
   rules:
-  - host: longhorn.your-domain.com  # Replace with your actual domain
+  - host: longhorn.homecluster.com  # Replace with your actual domain
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: longhorn-frontend
+            name: longhorn-ui-lb  # Changed to the new LoadBalancer service
             port:
-              number: 80  # Change to 80 if that's the correct port
+              number: 80
