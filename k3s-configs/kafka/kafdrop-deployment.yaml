@@ -24,8 +24,8 @@ spec:
         - name: KAFKA_PROPERTIES
           value: |
             security.protocol=SASL_PLAINTEXT
-            sasl.mechanism=SCRAM-SHA-256
-            sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="user1" password="${KAFKA_PASSWORD}";
+            sasl.mechanism=PLAIN
+            sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="user1" password="${KAFKA_PASSWORD}";
         - name: KAFKA_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -35,6 +35,8 @@ spec:
           value: "-Xms32M -Xmx64M"
         - name: SERVER_SERVLET_CONTEXTPATH
           value: "/"
+        - name: CMD_ARGS
+          value: "--message.format=DEFAULT --topic.deleteEnabled=false --topic.createEnabled=false --debug"
         resources:
           requests:
             cpu: 100m
