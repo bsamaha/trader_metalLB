@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chronograf
+  namespace: $NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chronograf
+  template:
+    metadata:
+      labels:
+        app: chronograf
+    spec:
+      containers:
+      - name: chronograf
+        image: chronograf:latest
+        ports:
+        - containerPort: 8888
+        env:
+        - name: INFLUXDB_URL
+          value: "http://influxdb:8086"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chronograf
+  namespace: $NAMESPACE
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8888
+  selector:
+    app: chronograf
