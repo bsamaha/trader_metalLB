@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configurable parameters
-NAMESPACE="monitoring"
+NAMESPACE="influxdb"
 RELEASE_NAME="influxdb"
 STORAGE_SIZE="20Gi"
 MEMORY_REQUEST="1Gi"
@@ -53,11 +53,17 @@ echo "Creating LoadBalancer Service for InfluxDB..."
 sed "s/\$NAMESPACE/$NAMESPACE/g" k3s-configs/influxdb/influx-service.yaml | kubectl apply -f -
 
 # Get InfluxDB service details
-INFLUXDB_SERVICE=$(kubectl get svc -n $NAMESPACE influxdb-lb -o jsonpath='{.metadata.name}')
-INFLUXDB_IP=$(kubectl get svc -n $NAMESPACE influxdb-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-INFLUXDB_PORT=$(kubectl get svc -n $NAMESPACE influxdb-lb -o jsonpath='{.spec.ports[0].port}')
+INFLUXDB_SERVICE=$(kubectl get svc -n $NAMESPACE influxdb-lb -o jsonpath='{.metadata.name}' 2>/dev/null)
+INFLUXDB_IP=$(kubectl get svc -n $NAMESPACE influxdb-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+INFLUXDB_PORT=$(kubectl get svc -n $NAMESPACE influxdb-lb -o jsonpath='{.spec.ports[0].port}' 2>/dev/null)
 
-echo "InfluxDB is installed and accessible at http://$INFLUXDB_IP:$INFLUXDB_PORT"
+if [ -z "$INFLUXDB_IP" ]; then
+  echo "Warning: LoadBalancer IP not yet assigned. Please check the service status."
+  echo "You can use 'kubectl get svc -n $NAMESPACE' to check the status."
+else
+  echo "InfluxDB is installed and accessible at http://$INFLUXDB_IP:$INFLUXDB_PORT"
+fi
+
 echo "Admin username: admin"
 echo "Admin password: $ADMIN_PASSWORD"
 echo "Please save this password securely. It will not be shown again."
