@@ -12,17 +12,17 @@ helm repo update
 
 # Install Kafka
 echo "Installing Kafka..."
-helm install kafka bitnami/kafka -f k3s-configs/kafka/kafka-values.yaml --namespace kafka --create-namespace
+helm install kafka bitnami/kafka -f k3s-configs/kafka/kafka-values.yaml
 
 # Wait for Kafka to be ready
 echo "Waiting for Kafka to be ready..."
-kubectl wait --namespace kafka \
+kubectl wait \
              --for=condition=ready pod \
              --selector=app.kubernetes.io/name=kafka \
              --timeout=300s
 
 # Get Kafka password
-KAFKA_PASSWORD=$(kubectl get secret kafka-user-passwords --namespace kafka -o jsonpath='{.data.client-passwords}' | base64 -d | cut -d , -f 1)
+KAFKA_PASSWORD=$(kubectl get secret kafka-user-passwords -o jsonpath='{.data.client-passwords}' | base64 -d | cut -d , -f 1)
 
 # Install Redpanda Console
 echo "Installing Redpanda Console..."
@@ -32,4 +32,4 @@ envsubst < k3s-configs/kafka/redpanda-console.yaml | kubectl apply -f -
 unset KAFKA_PASSWORD
 
 echo "Kafka and Redpanda Console setup complete!"
-echo "Redpanda Console will be accessible via LoadBalancer. Run 'kubectl get svc -n kafka' to find the external IP."
+echo "Redpanda Console will be accessible via LoadBalancer. Run 'kubectl get svc' to find the external IP."
