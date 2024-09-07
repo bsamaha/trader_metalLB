@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chronograf
-  namespace: $NAMESPACE
 spec:
   replicas: 1
   selector:
@@ -21,12 +20,21 @@ spec:
         env:
         - name: INFLUXDB_URL
           value: "http://influxdb:8086"
+        - name: INFLUXDB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-auth
+              key: admin-username
+        - name: INFLUXDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-auth
+              key: admin-password
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: chronograf
-  namespace: $NAMESPACE
   annotations:
     metallb.universe.tf/allow-shared-ip: "true"
 spec:
@@ -36,3 +44,17 @@ spec:
       targetPort: 8888
   selector:
     app: chronograf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb-lb
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8086
+      targetPort: 8086
+  selector:
+    app.kubernetes.io/name: influxdb
