@@ -30,6 +30,9 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 
+# Ensure the monitoring namespace is created
+kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+
 # Install Prometheus
 echo "Installing Prometheus..."
 helm install prometheus prometheus-community/prometheus \
