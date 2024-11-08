@@ -9,7 +9,7 @@ kubectl wait deployment/strimzi-cluster-operator \
     --timeout=300s
 
 # Deploy Kafka cluster
-kubectl apply -f kafka/kafka-setup.yaml
+kubectl apply -f ./k3s-configs/kafka/kafka-setup.yaml
 
 # Function to create Kafka topic
 create_kafka_topic() {
