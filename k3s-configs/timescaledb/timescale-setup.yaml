@@ -28,6 +28,10 @@ spec:
       labels:
         app: timescaledb
     spec:
+      volumes:
+      - name: timescaledb-config
+        configMap:
+          name: timescaledb-config
       containers:
       - name: timescaledb
         image: timescale/timescaledb:latest-pg14
