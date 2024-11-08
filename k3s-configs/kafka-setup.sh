@@ -14,12 +14,13 @@ kubectl apply -f kafka/kafka-setup.yaml
 # Function to create Kafka topic
 create_kafka_topic() {
     local topic_name=$1
+    local pod_name="kafka-topics-${topic_name//[.]/-}"  # Replace dots with dashes for pod name
     echo "Creating topic: $topic_name"
-    kubectl -n kafka run kafka-topics-$topic_name -it --rm \
+    kubectl -n kafka run "$pod_name" -it --rm \
         --image=quay.io/strimzi/kafka:latest-kafka-3.5.1 \
         --command -- bin/kafka-topics.sh \
         --bootstrap-server trading-cluster-kafka-bootstrap:9092 \
-        --create --topic $topic_name --partitions 3 --replication-factor 3
+        --create --topic "$topic_name" --partitions 3 --replication-factor 3
 }
 
 # Create all required topics
