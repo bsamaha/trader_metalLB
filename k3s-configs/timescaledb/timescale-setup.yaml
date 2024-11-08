@@ -1,0 +1,67 @@
+# timescaledb-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: timescaledb-config
+  namespace: trading
+data:
+  postgresql.conf: |
+    shared_buffers = '1GB'
+    maintenance_work_mem = '256MB'
+    max_connections = 100
+    work_mem = '16MB'
+    timescaledb.telemetry_level=off
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: timescaledb
+  namespace: trading
+spec:
+  serviceName: timescaledb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      containers:
+      - name: timescaledb
+        image: timescale/timescaledb:latest-pg14
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: timescaledb-secrets
+              key: password
+        volumeMounts:
+        - name: timescaledb-data
+          mountPath: /var/lib/postgresql/data
+        - name: timescaledb-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+  volumeClaimTemplates:
+  - metadata:
+      name: timescaledb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescaledb
+  namespace: trading
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: timescaledb
