@@ -6,12 +6,15 @@ if ! kubectl get namespace trading >/dev/null 2>&1; then
     kubectl create namespace trading
 fi
 
+# Apply TimescaleDB configuration
+echo "Deploying TimescaleDB..."
 kubectl apply -f ./k3s-configs/timescaledb/timescale-setup.yaml
 
 # Create TimescaleDB secrets
 echo "Creating TimescaleDB secrets..."
+TIMESCALEDB_PASSWORD=$(openssl rand -base64 32)
 kubectl -n trading create secret generic timescaledb-secrets \
-  --from-literal=password=$(openssl rand -base64 32) \
+  --from-literal=password=$TIMESCALEDB_PASSWORD \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # Validate Coinbase credentials
@@ -31,6 +34,10 @@ kubectl -n trading create secret generic coinbase-secrets \
   --from-literal=api-key="${COINBASE_API_KEY_NAME}" \
   --from-literal=api-secret="${COINBASE_API_SECRET}" \
   --dry-run=client -o yaml | kubectl apply -f -
+
+# Deploy pgAdmin4
+echo "Deploying pgAdmin4..."
+kubectl apply -f ./k3s-configs/timescaledb/pgadmin4.yaml
 
 # Wait for TimescaleDB pod to be ready
 echo "Waiting for TimescaleDB pod to be ready..."
@@ -82,4 +89,24 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     fi
 done
 
+# Wait for pgAdmin pod to be ready
+echo "Waiting for pgAdmin to be ready..."
+kubectl wait --for=condition=ready pod -l app=pgadmin -n trading --timeout=300s
+
+# Get service IPs
+PGADMIN_IP=$(kubectl get svc pgadmin -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+TIMESCALEDB_PASSWORD=$(kubectl get secret -n trading timescaledb-secrets -o jsonpath="{.data.password}" | base64 --decode)
+
 echo "Setup complete!"
+echo "-------------------"
+echo "pgAdmin is available at: http://$PGADMIN_IP"
+echo "Login credentials:"
+echo "  Email: admin@admin.com"
+echo "  Password: pgadmin123"
+echo ""
+echo "TimescaleDB connection details:"
+echo "  Host: timescaledb"
+echo "  Port: 5432"
+echo "  Database: trading"
+echo "  Username: postgres"
+echo "  Password: $TIMESCALEDB_PASSWORD"
