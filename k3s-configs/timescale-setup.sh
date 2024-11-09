@@ -52,6 +52,12 @@ check_postgres_ready() {
     return $?
 }
 
+# Function to check if TimescaleDB extension is ready
+check_timescaledb_ready() {
+    kubectl exec -n trading $TIMESCALE_POD -- psql -U postgres -c "SELECT extname FROM pg_extension WHERE extname = 'timescaledb';" | grep -q timescaledb
+    return $?
+}
+
 # Wait for PostgreSQL to be ready with timeout
 echo "Waiting for PostgreSQL to be ready..."
 TIMEOUT=60
@@ -62,6 +68,19 @@ until check_postgres_ready; do
         exit 1
     fi
     echo "Waiting for PostgreSQL to be ready... ($COUNTER/$TIMEOUT)"
+    sleep 2
+    ((COUNTER++))
+done
+
+# Wait for TimescaleDB extension to be ready
+echo "Waiting for TimescaleDB extension to be ready..."
+COUNTER=0
+until check_timescaledb_ready; do
+    if [ $COUNTER -eq $TIMEOUT ]; then
+        echo "Timeout waiting for TimescaleDB extension to be ready"
+        exit 1
+    fi
+    echo "Waiting for TimescaleDB extension to be ready... ($COUNTER/$TIMEOUT)"
     sleep 2
     ((COUNTER++))
 done

@@ -39,8 +39,6 @@ spec:
               key: admin-password
         - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
           value: "True"
-        - name: PGADMIN_CONFIG_LOGIN_BANNER
-          value: '"Authorized users only!"'
         ports:
         - name: http
           containerPort: 80
