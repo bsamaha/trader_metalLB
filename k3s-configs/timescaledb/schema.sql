@@ -22,14 +22,15 @@ CREATE INDEX idx_candles_symbol ON candles (symbol, time DESC);
 
 -- Create trades table
 CREATE TABLE trades (
-    id          SERIAL PRIMARY KEY,
+    id          SERIAL,
     time        TIMESTAMPTZ NOT NULL,
     symbol      TEXT NOT NULL,
     side        TEXT NOT NULL,
     price       NUMERIC NOT NULL,
     size        NUMERIC NOT NULL,
     fee         NUMERIC NOT NULL,
-    order_id    TEXT NOT NULL
+    order_id    TEXT NOT NULL,
+    PRIMARY KEY (id, time)
 );
 
 -- Create hypertable for trades
