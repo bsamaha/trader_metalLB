@@ -48,8 +48,10 @@ spec:
           httpGet:
             path: /misc/ping
             port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 12  # Allow more retries but faster
         resources:
           requests:
             memory: "256Mi"
