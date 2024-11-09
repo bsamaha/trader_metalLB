@@ -8,9 +8,8 @@ kubectl -n trading create secret generic timescaledb-secrets \
   --from-literal=password=$(openssl rand -base64 32)
 
 # Get Coinbase credentials from environment variables or prompt user
-API_KEY=${COINBASE_API_KEY:-""}
-API_SECRET=${COINBASE_API_SECRET:-""}
-PASSPHRASE=${COINBASE_PASSPHRASE:-""}
+COINBASE_API_KEY_NAME=${COINBASE_API_KEY_NAME:-""}
+COINBASE_API_SECRET=${COINBASE_API_SECRET:-""}
 
 # Validate credentials
 if [[ -z "$API_KEY" || "$API_KEY" == "your-api-key" ]]; then
@@ -20,11 +19,6 @@ fi
 
 if [[ -z "$API_SECRET" || "$API_SECRET" == "your-api-secret" ]]; then
     echo "Error: Please set COINBASE_API_SECRET environment variable"
-    exit 1
-fi
-
-if [[ -z "$PASSPHRASE" || "$PASSPHRASE" == "your-passphrase" ]]; then
-    echo "Error: Please set COINBASE_PASSPHRASE environment variable"
     exit 1
 fi
 
