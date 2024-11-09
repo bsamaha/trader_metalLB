@@ -36,22 +36,15 @@ kubectl -n trading create secret generic coinbase-secrets \
 echo "Waiting for TimescaleDB to be ready..."
 kubectl wait --for=condition=ready pod -l app=timescaledb -n trading --timeout=300s
 
-# Forward TimescaleDB port
-echo "Setting up port forward..."
-kubectl port-forward -n trading svc/timescaledb 5432:5432 &
-FORWARD_PID=$!
+# Get the pod name
+TIMESCALE_POD=$(kubectl get pod -n trading -l app=timescaledb -o jsonpath="{.items[0].metadata.name}")
 
-# Give the port forward a moment to establish
-sleep 5
+# Copy schema file to the pod
+echo "Copying schema to pod..."
+kubectl cp timescaledb/schema.sql trading/$TIMESCALE_POD:/tmp/schema.sql
 
-# Get password
-PGPASSWORD=$(kubectl get secret -n trading timescaledb-secrets -o jsonpath="{.data.password}" | base64 --decode)
-
-# Apply schema
+# Apply schema inside the pod
 echo "Applying database schema..."
-PGPASSWORD=$PGPASSWORD psql -h localhost -U postgres -f timescaledb/schema.sql
-
-# Clean up port forward
-kill $FORWARD_PID
+kubectl exec -n trading $TIMESCALE_POD -- psql -U postgres -f /tmp/schema.sql
 
 echo "Setup complete!"
