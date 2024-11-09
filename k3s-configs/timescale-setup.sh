@@ -89,9 +89,15 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     fi
 done
 
-# Wait for pgAdmin pod to be ready
+# Wait for pgAdmin pod to be ready with debugging
 echo "Waiting for pgAdmin to be ready..."
-kubectl wait --for=condition=ready pod -l app=pgadmin -n trading --timeout=300s
+kubectl wait --for=condition=ready pod -l app=pgadmin -n trading --timeout=120s || {
+    echo "pgAdmin pod not ready, checking status..."
+    kubectl describe pod -l app=pgadmin -n trading
+    kubectl logs -l app=pgadmin -n trading
+    echo "Failed to start pgAdmin, exiting..."
+    exit 1
+}
 
 # Get service IPs
 PGADMIN_IP=$(kubectl get svc pgadmin -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')

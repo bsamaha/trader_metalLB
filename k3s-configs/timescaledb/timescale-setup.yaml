@@ -49,6 +49,21 @@ spec:
         - name: timescaledb-config
           mountPath: /etc/postgresql/postgresql.conf
           subPath: postgresql.conf
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 10
   volumeClaimTemplates:
   - metadata:
       name: timescaledb-data
@@ -63,7 +78,10 @@ kind: Service
 metadata:
   name: timescaledb
   namespace: trading
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
 spec:
+  type: LoadBalancer
   ports:
   - port: 5432
     targetPort: 5432

@@ -40,7 +40,7 @@ spec:
         - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
           value: "True"
         - name: PGADMIN_CONFIG_LOGIN_BANNER
-          value: "Authorized users only!"
+          value: '"Authorized users only!"'
         ports:
         - name: http
           containerPort: 80
@@ -48,10 +48,10 @@ spec:
           httpGet:
             path: /misc/ping
             port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 12  # Allow more retries but faster
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
+          failureThreshold: 10
         resources:
           requests:
             memory: "256Mi"
