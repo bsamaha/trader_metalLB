@@ -41,7 +41,7 @@ TIMESCALE_POD=$(kubectl get pod -n trading -l app=timescaledb -o jsonpath="{.ite
 
 # Copy schema file to the pod
 echo "Copying schema to pod..."
-kubectl cp timescaledb/schema.sql trading/$TIMESCALE_POD:/tmp/schema.sql
+kubectl cp ./k3s-configs/timescaledb/schema.sql trading/$TIMESCALE_POD:/tmp/schema.sql
 
 # Apply schema inside the pod
 echo "Applying database schema..."
