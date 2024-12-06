@@ -125,7 +125,11 @@ spec:
               name: pgadmin-secret
               key: admin-password
         - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
-          value: "True"
+          value: "False"
+        - name: PGADMIN_CONFIG_CSRF_SESSION_KEY
+          value: "SuperSecretKey"
+        - name: PGADMIN_CONFIG_SECRET_KEY
+          value: "SuperSecretKey"
         - name: PGADMIN_LISTEN_PORT
           value: "80"
         - name: PGADMIN_CONFIG_SERVER_MODE
@@ -137,7 +141,7 @@ spec:
           containerPort: 80
         readinessProbe:
           httpGet:
-            path: /login
+            path: /misc/ping
             port: 80
             scheme: HTTP
           initialDelaySeconds: 30
@@ -148,8 +152,8 @@ spec:
           httpGet:
             path: /misc/ping
             port: 80
-          initialDelaySeconds: 60
-          periodSeconds: 20
+          initialDelaySeconds: 30
+          periodSeconds: 10
           timeoutSeconds: 5
         resources:
           requests:
