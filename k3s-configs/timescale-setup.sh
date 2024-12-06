@@ -6,10 +6,6 @@ if ! kubectl get namespace trading >/dev/null 2>&1; then
     kubectl create namespace trading
 fi
 
-# Apply TimescaleDB configuration
-echo "Deploying TimescaleDB..."
-kubectl apply -f ./k3s-configs/timescaledb/timescale-setup.yaml
-
 # Create TimescaleDB secrets
 echo "Creating TimescaleDB secrets..."
 TIMESCALEDB_PASSWORD=$(openssl rand -base64 32)
@@ -17,13 +13,24 @@ kubectl -n trading create secret generic timescaledb-secrets \
   --from-literal=password=$TIMESCALEDB_PASSWORD \
   --dry-run=client -o yaml | kubectl apply -f -
 
-# Create ingestion service user secrets
-echo "Creating ingestion service user secrets..."
-INGESTION_PASSWORD=$(openssl rand -base64 32)
-kubectl -n trading create secret generic timescaledb-ingestion-secrets \
-  --from-literal=username=trading_ingestion \
-  --from-literal=password=$INGESTION_PASSWORD \
+# Create service user secrets
+echo "Creating service user secrets..."
+SERVICE_PASSWORD=$(openssl rand -base64 32)
+kubectl -n trading create secret generic timescaledb-service-secrets \
+  --from-literal=username=trading_service \
+  --from-literal=password=$SERVICE_PASSWORD \
   --dry-run=client -o yaml | kubectl apply -f -
+
+# Create pgAdmin secrets
+echo "Creating pgAdmin secrets..."
+kubectl -n trading create secret generic pgadmin-secret \
+  --from-literal=admin-email=admin@admin.com \
+  --from-literal=admin-password=pgadmin123 \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Apply TimescaleDB and pgAdmin configuration
+echo "Deploying TimescaleDB and pgAdmin..."
+kubectl apply -f ./k3s-configs/timescaledb/timescale-setup.yaml
 
 # Wait for TimescaleDB pod to be ready
 echo "Waiting for TimescaleDB pod to be ready..."
@@ -35,12 +42,6 @@ TIMESCALE_POD=$(kubectl get pod -n trading -l app=timescaledb -o jsonpath="{.ite
 # Function to check if PostgreSQL is ready
 check_postgres_ready() {
     kubectl exec -n trading $TIMESCALE_POD -- pg_isready -U postgres &>/dev/null
-    return $?
-}
-
-# Function to check if TimescaleDB extension is ready
-check_timescaledb_ready() {
-    kubectl exec -n trading $TIMESCALE_POD -- psql -U postgres -c "SELECT extname FROM pg_extension WHERE extname = 'timescaledb';" | grep -q timescaledb
     return $?
 }
 
@@ -58,19 +59,6 @@ until check_postgres_ready; do
     ((COUNTER++))
 done
 
-# Wait for TimescaleDB extension to be ready
-echo "Waiting for TimescaleDB extension to be ready..."
-COUNTER=0
-until check_timescaledb_ready; do
-    if [ $COUNTER -eq $TIMEOUT ]; then
-        echo "Timeout waiting for TimescaleDB extension to be ready"
-        exit 1
-    fi
-    echo "Waiting for TimescaleDB extension to be ready... ($COUNTER/$TIMEOUT)"
-    sleep 2
-    ((COUNTER++))
-done
-
 # Copy schema file to the pod
 echo "Copying schema to pod..."
 kubectl cp ./k3s-configs/timescaledb/schema.sql trading/$TIMESCALE_POD:/tmp/schema.sql
@@ -81,7 +69,7 @@ MAX_RETRIES=5
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if kubectl exec -n trading $TIMESCALE_POD -- psql -U postgres \
-        -v SERVICE_PASSWORD="$SERVICE_PASSWORD" \
+        -v SERVICE_PASSWORD="'$SERVICE_PASSWORD'" \
         -f /tmp/schema.sql; then
         echo "Schema applied successfully"
         break
@@ -96,19 +84,35 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     fi
 done
 
-# Deploy all components (pgAdmin is now included in this file)
-echo "Deploying TimescaleDB and pgAdmin..."
-kubectl apply -f ./k3s-configs/timescaledb/timescale-setup.yaml
-
 # Wait for pgAdmin pod to be ready
 echo "Waiting for pgAdmin to be ready..."
-kubectl wait --for=condition=ready pod -l app=pgadmin -n trading --timeout=120s
+kubectl wait --for=condition=ready pod -l app=psql -n trading --timeout=300s
+
+# Function to check if pgAdmin is accessible
+check_pgadmin_ready() {
+    PGADMIN_POD=$(kubectl get pod -n trading -l app=psql -o jsonpath="{.items[0].metadata.name}")
+    kubectl exec -n trading $PGADMIN_POD -- curl -s http://localhost:80/misc/ping &>/dev/null
+    return $?
+}
+
+# Wait for pgAdmin to be fully ready
+echo "Waiting for pgAdmin service to be accessible..."
+TIMEOUT=60
+COUNTER=0
+until check_pgadmin_ready; do
+    if [ $COUNTER -eq $TIMEOUT ]; then
+        echo "Timeout waiting for pgAdmin to be accessible"
+        exit 1
+    fi
+    echo "Waiting for pgAdmin to be accessible... ($COUNTER/$TIMEOUT)"
+    sleep 2
+    ((COUNTER++))
+done
 
 # Get service IPs
-PGADMIN_IP=$(kubectl get svc pgadmin -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+PGADMIN_IP=$(kubectl get svc psql -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 TIMESCALEDB_IP=$(kubectl get svc timescaledb -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-# Add final connection details
 echo "Setup complete!"
 echo "-------------------"
 echo "pgAdmin is available at: http://$PGADMIN_IP"

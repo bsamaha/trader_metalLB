@@ -2,6 +2,9 @@
 CREATE DATABASE trading;
 \c trading
 
+-- Enable TimescaleDB extension
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+
 -- Create OHLCV table with TimescaleDB
 CREATE TABLE candles (
     time        TIMESTAMPTZ NOT NULL,
@@ -45,8 +48,6 @@ GRANT USAGE ON SCHEMA public TO trading_service;
 
 -- Grant table-specific permissions
 GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO trading_service;
--- Allow the service user to create hypertables and use TimescaleDB features
-GRANT USAGE ON SCHEMA timescaledb TO trading_service;
 
 -- Grant permissions for future tables
 ALTER DEFAULT PRIVILEGES IN SCHEMA public 

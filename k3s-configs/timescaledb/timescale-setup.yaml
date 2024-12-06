@@ -98,17 +98,17 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pgadmin
+  name: psql
   namespace: trading
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: pgadmin
+      app: psql
   template:
     metadata:
       labels:
-        app: pgadmin
+        app: psql
     spec:
       containers:
       - name: pgadmin
@@ -175,7 +175,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: pgadmin
+  name: psql
   namespace: trading
   annotations:
     metallb.universe.tf/allow-shared-ip: "true"
@@ -187,4 +187,4 @@ spec:
     targetPort: 80
     protocol: TCP
   selector:
-    app: pgadmin
+    app: psql
