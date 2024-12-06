@@ -35,3 +35,19 @@ CREATE TABLE trades (
 
 -- Create hypertable for trades
 SELECT create_hypertable('trades', 'time');
+
+-- Create service user with limited privileges
+CREATE USER trading_service WITH PASSWORD 'service_password';
+
+-- Grant necessary permissions
+GRANT CONNECT ON DATABASE trading TO trading_service;
+GRANT USAGE ON SCHEMA public TO trading_service;
+
+-- Grant table-specific permissions
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO trading_service;
+-- Allow the service user to create hypertables and use TimescaleDB features
+GRANT USAGE ON SCHEMA timescaledb TO trading_service;
+
+-- Grant permissions for future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+    GRANT SELECT, INSERT, UPDATE ON TABLES TO trading_service;

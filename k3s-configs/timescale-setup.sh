@@ -17,6 +17,14 @@ kubectl -n trading create secret generic timescaledb-secrets \
   --from-literal=password=$TIMESCALEDB_PASSWORD \
   --dry-run=client -o yaml | kubectl apply -f -
 
+# Create ingestion service user secrets
+echo "Creating ingestion service user secrets..."
+INGESTION_PASSWORD=$(openssl rand -base64 32)
+kubectl -n trading create secret generic timescaledb-ingestion-secrets \
+  --from-literal=username=trading_ingestion \
+  --from-literal=password=$INGESTION_PASSWORD \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 # Validate Coinbase credentials
 if [[ -z "${COINBASE_API_KEY_NAME}" ]]; then
     echo "Error: COINBASE_API_KEY_NAME not set"
