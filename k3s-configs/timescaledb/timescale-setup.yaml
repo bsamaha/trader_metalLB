@@ -124,37 +124,14 @@ spec:
             secretKeyRef:
               name: pgadmin-secret
               key: admin-password
-        - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
-          value: "False"
-        - name: PGADMIN_CONFIG_CSRF_SESSION_KEY
-          value: "SuperSecretKey"
-        - name: PGADMIN_CONFIG_SECRET_KEY
-          value: "SuperSecretKey"
-        - name: PGADMIN_LISTEN_PORT
-          value: "80"
-        - name: PGADMIN_CONFIG_SERVER_MODE
-          value: "False"
-        - name: PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED
-          value: "False"
         ports:
-        - name: http
-          containerPort: 80
+        - containerPort: 80
         readinessProbe:
           httpGet:
             path: /misc/ping
             port: 80
-            scheme: HTTP
           initialDelaySeconds: 30
           periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 6
-        livenessProbe:
-          httpGet:
-            path: /misc/ping
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
         resources:
           requests:
             memory: "512Mi"
@@ -163,14 +140,10 @@ spec:
             memory: "1Gi"
             cpu: "500m"
         volumeMounts:
-        - name: pgadmin-data
-          mountPath: /var/lib/pgadmin
         - name: pgadmin-servers
           mountPath: /pgadmin4/servers.json
           subPath: servers.json
       volumes:
-      - name: pgadmin-data
-        emptyDir: {}
       - name: pgadmin-servers
         configMap:
           name: pgadmin-servers
