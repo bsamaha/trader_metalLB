@@ -25,28 +25,6 @@ kubectl -n trading create secret generic timescaledb-ingestion-secrets \
   --from-literal=password=$INGESTION_PASSWORD \
   --dry-run=client -o yaml | kubectl apply -f -
 
-# Validate Coinbase credentials
-if [[ -z "${COINBASE_API_KEY_NAME}" ]]; then
-    echo "Error: COINBASE_API_KEY_NAME not set"
-    exit 1
-fi
-
-if [[ -z "${COINBASE_API_SECRET}" ]]; then
-    echo "Error: COINBASE_API_SECRET not set"
-    exit 1
-fi
-
-# Create Coinbase secrets
-echo "Creating Coinbase API secrets..."
-kubectl -n trading create secret generic coinbase-secrets \
-  --from-literal=api-key="${COINBASE_API_KEY_NAME}" \
-  --from-literal=api-secret="${COINBASE_API_SECRET}" \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-# Deploy pgAdmin4
-echo "Deploying pgAdmin4..."
-kubectl apply -f ./k3s-configs/timescaledb/pgadmin4.yaml
-
 # Wait for TimescaleDB pod to be ready
 echo "Waiting for TimescaleDB pod to be ready..."
 kubectl wait --for=condition=ready pod -l app=timescaledb -n trading --timeout=300s
@@ -102,7 +80,9 @@ echo "Applying database schema..."
 MAX_RETRIES=5
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if kubectl exec -n trading $TIMESCALE_POD -- psql -U postgres -f /tmp/schema.sql; then
+    if kubectl exec -n trading $TIMESCALE_POD -- psql -U postgres \
+        -v SERVICE_PASSWORD="$SERVICE_PASSWORD" \
+        -f /tmp/schema.sql; then
         echo "Schema applied successfully"
         break
     else
@@ -116,20 +96,19 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     fi
 done
 
-# Wait for pgAdmin pod to be ready with debugging
+# Deploy all components (pgAdmin is now included in this file)
+echo "Deploying TimescaleDB and pgAdmin..."
+kubectl apply -f ./k3s-configs/timescaledb/timescale-setup.yaml
+
+# Wait for pgAdmin pod to be ready
 echo "Waiting for pgAdmin to be ready..."
-kubectl wait --for=condition=ready pod -l app=pgadmin -n trading --timeout=120s || {
-    echo "pgAdmin pod not ready, checking status..."
-    kubectl describe pod -l app=pgadmin -n trading
-    kubectl logs -l app=pgadmin -n trading
-    echo "Failed to start pgAdmin, exiting..."
-    exit 1
-}
+kubectl wait --for=condition=ready pod -l app=pgadmin -n trading --timeout=120s
 
 # Get service IPs
 PGADMIN_IP=$(kubectl get svc pgadmin -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-TIMESCALEDB_PASSWORD=$(kubectl get secret -n trading timescaledb-secrets -o jsonpath="{.data.password}" | base64 --decode)
+TIMESCALEDB_IP=$(kubectl get svc timescaledb -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
+# Add final connection details
 echo "Setup complete!"
 echo "-------------------"
 echo "pgAdmin is available at: http://$PGADMIN_IP"
@@ -138,8 +117,14 @@ echo "  Email: admin@admin.com"
 echo "  Password: pgadmin123"
 echo ""
 echo "TimescaleDB connection details:"
-echo "  Host: timescaledb"
+echo "  Host: $TIMESCALEDB_IP"
 echo "  Port: 5432"
 echo "  Database: trading"
+echo ""
+echo "Admin credentials:"
 echo "  Username: postgres"
 echo "  Password: $TIMESCALEDB_PASSWORD"
+echo ""
+echo "Service credentials:"
+echo "  Username: trading_service"
+echo "  Password: $SERVICE_PASSWORD"

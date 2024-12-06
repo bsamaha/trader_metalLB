@@ -8,9 +8,31 @@ data:
   postgresql.conf: |
     shared_buffers = '1GB'
     maintenance_work_mem = '256MB'
-    max_connections = 100
+    max_connections = 10
     work_mem = '16MB'
     timescaledb.telemetry_level=off
+---
+# pgadmin-servers.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgadmin-servers
+  namespace: trading
+data:
+  servers.json: |
+    {
+      "Servers": {
+        "1": {
+          "Name": "TimescaleDB",
+          "Group": "Servers",
+          "Host": "timescaledb",
+          "Port": 5432,
+          "MaintenanceDB": "trading",
+          "Username": "postgres",
+          "SSLMode": "prefer"
+        }
+      }
+    }
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -73,6 +95,68 @@ spec:
         requests:
           storage: 100Gi
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  namespace: trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+    spec:
+      containers:
+      - name: pgadmin
+        image: dpage/pgadmin4:latest
+        env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: pgadmin-secret
+              key: admin-email
+        - name: PGADMIN_DEFAULT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pgadmin-secret
+              key: admin-password
+        - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
+          value: "True"
+        ports:
+        - name: http
+          containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /misc/ping
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
+          failureThreshold: 10
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: pgadmin-data
+          mountPath: /var/lib/pgadmin
+        - name: pgadmin-servers
+          mountPath: /pgadmin4/servers.json
+          subPath: servers.json
+      volumes:
+      - name: pgadmin-data
+        emptyDir: {}
+      - name: pgadmin-servers
+        configMap:
+          name: pgadmin-servers
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -87,3 +171,20 @@ spec:
     targetPort: 5432
   selector:
     app: timescaledb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin
+  namespace: trading
+  annotations:
+    metallb.universe.tf/allow-shared-ip: "true"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  selector:
+    app: pgadmin

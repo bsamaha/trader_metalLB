@@ -37,7 +37,7 @@ CREATE TABLE trades (
 SELECT create_hypertable('trades', 'time');
 
 -- Create service user with limited privileges
-CREATE USER trading_service WITH PASSWORD 'service_password';
+CREATE USER trading_service WITH PASSWORD :'SERVICE_PASSWORD';
 
 -- Grant necessary permissions
 GRANT CONNECT ON DATABASE trading TO trading_service;
