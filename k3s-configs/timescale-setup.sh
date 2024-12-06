@@ -97,7 +97,7 @@ check_pgadmin_ready() {
 
 # Wait for pgAdmin to be fully ready
 echo "Waiting for pgAdmin service to be accessible..."
-TIMEOUT=60
+TIMEOUT=30
 COUNTER=0
 until check_pgadmin_ready; do
     if [ $COUNTER -eq $TIMEOUT ]; then
@@ -105,7 +105,7 @@ until check_pgadmin_ready; do
         exit 1
     fi
     echo "Waiting for pgAdmin to be accessible... ($COUNTER/$TIMEOUT)"
-    sleep 2
+    sleep 1
     ((COUNTER++))
 done
 
