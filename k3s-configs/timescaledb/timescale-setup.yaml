@@ -10,7 +10,15 @@ data:
     maintenance_work_mem = '256MB'
     max_connections = 10
     work_mem = '16MB'
+    effective_cache_size = '3GB'
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    wal_buffers = '16MB'
+    checkpoint_timeout = '15min'
+    max_wal_size = '2GB'
     timescaledb.telemetry_level=off
+    timescaledb.max_background_workers = 8
+    timescaledb.compress_chunk_time_interval = '1 day'
 ---
 # pgadmin-servers.yaml
 apiVersion: v1

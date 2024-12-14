@@ -9,20 +9,31 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE TABLE candles (
     time        TIMESTAMPTZ NOT NULL,
     symbol      TEXT NOT NULL,
-    open        NUMERIC NOT NULL,
-    high        NUMERIC NOT NULL,
-    low         NUMERIC NOT NULL,
-    close       NUMERIC NOT NULL,
-    volume      NUMERIC NOT NULL,
+    open        NUMERIC(20,8) NOT NULL,
+    high        NUMERIC(20,8) NOT NULL,
+    low         NUMERIC(20,8) NOT NULL,
+    close       NUMERIC(20,8) NOT NULL,
+    volume      NUMERIC(20,8) NOT NULL,
     interval    INTERVAL NOT NULL,
     CONSTRAINT candles_time_symbol_unique UNIQUE (time, symbol)
 );
 
--- Create hypertable
-SELECT create_hypertable('candles', 'time');
+-- Create hypertable with better chunking interval (1 day chunks for 5min candles)
+SELECT create_hypertable('candles', 'time', chunk_time_interval => INTERVAL '1 day');
 
--- Create indexes
-CREATE INDEX idx_candles_symbol ON candles (symbol, time DESC);
+-- Optimize indexes
+DROP INDEX IF EXISTS idx_candles_symbol;
+CREATE INDEX idx_candles_symbol_time ON candles (symbol, time DESC) INCLUDE (close);
+
+-- Add compression policy
+ALTER TABLE candles SET (
+    timescaledb.compress,
+    timescaledb.compress_segmentby = 'symbol',
+    timescaledb.compress_orderby = 'time DESC'
+);
+
+-- Automatically compress chunks older than 1 day
+SELECT add_compression_policy('candles', INTERVAL '1 day');
 
 -- Create trades table
 CREATE TABLE trades (
